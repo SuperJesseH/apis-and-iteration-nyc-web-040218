@@ -1,46 +1,50 @@
+
 require 'rest-client'
 require 'json'
 require 'pry'
 
-def get_character_movies_from_api(character)
-  #make the web request
-  all_characters = RestClient.get("http://www.swapi.co/api/people/")
-  character_hash = JSON.parse(all_characters)
-  # iterate over the character hash to find the collection of `films` for the given
-  #   `character`
-  character_hash["results"].find do |person|
-    person["name"].downcase == character
-  end
-  # found_name["films"]  = [url1,url2,url3]
-  # collect those film API urls, make a web request to each URL to get the info
-  #  for that film
 
-  # return value of this method should be collection of info about each film.
-  #  i.e. an array of hashes in which each hash reps a given film
-  # this collection will be the argument given to `parse_character_movies`
-  #  and that method will do some nice presentation stuff: puts out a list
-  #  of movies by title. play around with puts out other info about a given film.
+
+def get_character_movies_from_api(character)
+# Requests a list of all characters from starwars API and returns all info on given charcter
+  character_hash = []
+  continue = true
+  count = 0
+  while count < 9
+    count += 1
+    all_characters = RestClient.get("http://www.swapi.co/api/people/?page=#{count}")
+    current_page_hash = JSON.parse(all_characters)
+    character_hash << current_page_hash
+  end
+  character_hash.each_with_index do |page, index|
+    character_hash[index]["results"].each do |person|
+      if person["name"].downcase == character
+       return person
+      end
+    end
+  end
 end
 
 
+
+
 def get_movie_json (character_movies)
-    character_movies["films"].map do |movie|
+  #takes character info and finds requests all info on movies in which the charater appears
+  character_movies["films"].map do |movie|
     response = RestClient.get("#{movie}")
     movie_json = JSON.parse(response)
   end
 end
 
 def parse_character_movies(films_hash)
-  # some iteration magic and puts out the movies in a nice list
+  #Take array of movie(s) info, returns an array of titles, and prints them
   movie_array = []
   films_hash.map do |movie|
     movie_array << movie["title"]
   end
-
   movie_array.each do |movie|
     puts movie
   end
-  movie_array
 end
 
 def show_character_movies(character)
